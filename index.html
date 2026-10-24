@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Igra Spomin</title>
+
+<style>
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  color: white;
+  background: linear-gradient(135deg, #171738, #443477);
+}
+
+h1 {
+  font-size: 32px;
+}
+
+.stats {
+  font-size: 20px;
+  line-height: 1.8;
+}
+
+#game {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(55px, 75px));
+  gap: 10px;
+  justify-content: center;
+  margin: 25px auto;
+}
+
+.card {
+  height: 80px;
+  font-size: 32px;
+  border: 2px solid #a99aff;
+  border-radius: 12px;
+  background: #7260d8;
+  cursor: pointer;
+}
+
+.card.open {
+  background: white;
+  border-color: white;
+}
+
+.card.matched {
+  background: #baffdc;
+  border-color: #55edaa;
+}
+
+#message {
+  font-size: 21px;
+  font-weight: bold;
+}
+
+#restart {
+  padding: 13px 22px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  background: #55edaa;
+  cursor: pointer;
+}
+
+@media (max-width: 360px) {
+  #game { gap: 6px; }
+  .card { height: 65px; font-size: 27px; }
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧠 IGRA SPOMIN 🎮</h1>
+
+<div class="stats">
+  Poteze: <span id="moves">0</span>
+  <br>
+  Pari: <span id="pairs">0</span> / 8
+</div>
+
+<div id="game"></div>
+<p id="message"></p>
+
+<button id="restart" onclick="startGame()">
+  🔄 Nova igra
+</button>
+
+<script>
+const emojis = [
+  "🚀", "👽", "🤓", "🌈",
+  "🐉", "🎮", "🍕", "⚡"
+];
+
+let firstCard = null;
+let locked = false;
+let pairs = 0;
+let moves = 0;
+
+function startGame() {
+  const cards = [...emojis, ...emojis];
+
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+
+  firstCard = null;
+  locked = false;
+  pairs = 0;
+  moves = 0;
+
+  document.getElementById("moves").textContent = "0";
+  document.getElementById("pairs").textContent = "0";
+  document.getElementById("message").textContent = "";
+
+  const game = document.getElementById("game");
+  game.innerHTML = "";
+
+  cards.forEach(emoji => {
+    const card = document.createElement("button");
+    card.className = "card";
+    card.textContent = "❓";
+    card.dataset.emoji = emoji;
+    card.setAttribute("aria-label", "Skrita kartica");
+
+    card.addEventListener("click", () => flipCard(card));
+    game.appendChild(card);
+  });
+}
+
+function flipCard(card) {
+  if (
+    locked ||
+    card.classList.contains("open") ||
+    card.classList.contains("matched")
+  ) return;
+
+  card.textContent = card.dataset.emoji;
+  card.classList.add("open");
+
+  if (!firstCard) {
+    firstCard = card;
+    return;
+  }
+
+  moves++;
+  document.getElementById("moves").textContent = moves;
+
+  if (firstCard.dataset.emoji === card.dataset.emoji) {
+    firstCard.classList.remove("open");
+    card.classList.remove("open");
+    firstCard.classList.add("matched");
+    card.classList.add("matched");
+
+    firstCard = null;
+    pairs++;
+
+    document.getElementById("pairs").textContent = pairs;
+
+    if (pairs === emojis.length) {
+      document.getElementById("message").textContent =
+        "🏆 BRAVO! Našel si vse pare!";
+    }
+  } else {
+    locked = true;
+    const previousCard = firstCard;
+    firstCard = null;
+
+    setTimeout(() => {
+      previousCard.textContent = "❓";
+      card.textContent = "❓";
+      previousCard.classList.remove("open");
+      card.classList.remove("open");
+      locked = false;
+    }, 800);
+  }
+}
+
+startGame();
+</script>
+
+</body>
+</html>
